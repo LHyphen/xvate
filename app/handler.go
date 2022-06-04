@@ -40,8 +40,12 @@ func Handler(filename string) error {
 		outfile = strings.TrimSuffix(filename, filesuffix)
 		wText, err = RSADecrypt(rText, exPath+"/self/private.pem")
 	} else {
+		// 选择要加密公钥
+		pubkeys := scanDir(exPath + "/other")
+		username := selectUser(pubkeys)
+
 		outfile = filename + ".xdat"
-		wText, err = RSAEncrypt(rText, exPath+"/other/public.pem")
+		wText, err = RSAEncrypt(rText, exPath+"/other/"+username+".pem")
 	}
 	if err != nil {
 		return err
@@ -59,7 +63,46 @@ func Handler(filename string) error {
 	// 3. 关闭文件
 	wfile.Close()
 
-	fmt.Println("input file: " + filename)
+	fmt.Println("\ninput file: " + filename)
 	fmt.Println("output file: " + outfile)
 	return nil
+}
+
+func scanDir(pubPath string) (files []string) {
+	err := filepath.Walk(pubPath, func(path string, info os.FileInfo, err error) error {
+		if filepath.Ext(path) != ".pem" {
+			return nil
+		}
+		files = append(files, strings.TrimSuffix(info.Name(), ".pem"))
+		return nil
+	})
+	if err != nil {
+		panic(err)
+	}
+	return
+}
+
+func selectUser(files []string) (username string) {
+	n := len(files)
+	if n == 1 {
+		username = files[0]
+		return
+	}
+
+	fmt.Println("\n==================ALL USER==================")
+	for i, file := range files {
+		fmt.Printf("[%2d]. %v\n", i, file)
+	}
+
+	num := -1
+	fmt.Print("please select a user's pubkey(enter a number): ")
+	fmt.Scanln(&num)
+	for num == -1 || num < 0 || num > n-1 {
+		fmt.Print("input is wrong, please input again: ")
+		fmt.Scanln(&num)
+	}
+
+	username = files[num]
+
+	return
 }

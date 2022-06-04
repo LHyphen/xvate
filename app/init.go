@@ -5,8 +5,10 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
+	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 )
 
 // 参数bits: 指定生成的秘钥的长度, 单位: bit
@@ -63,7 +65,7 @@ func RsaGenKey(bits int) error {
 		Type:  "RSA PUBLIC KEY", //"PUBLIC KEY",
 		Bytes: derPkix,
 	}
-	pubFile, err := os.Create(selfPath + "/public.pem")
+	pubFile, err := os.Create(selfPath + "/public_" + enterName() + ".pem")
 	if err != nil {
 		return err
 	}
@@ -76,6 +78,18 @@ func RsaGenKey(bits int) error {
 
 	return nil
 
+}
+
+func enterName() (name string) {
+	fmt.Print("please input a name: ")
+	fmt.Scanln(&name)
+	r, _ := regexp.Compile("^[a-zA-Z0-9_-]{3,16}$")
+	for !r.MatchString(name) {
+		fmt.Println("not legal name, only support letters, numbers, _- and 3~16 bits")
+		fmt.Print("please enter again: ")
+		fmt.Scanln(&name)
+	}
+	return
 }
 
 // func main() {
