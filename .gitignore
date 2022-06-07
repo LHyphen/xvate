@@ -17,3 +17,5 @@
 *.bak
 
 /tmp
+/other
+/self
